@@ -71,7 +71,7 @@ impl FromStr for Address {
                     return Err(AddressParsingError::EmptyHostname);
                 }
 
-                (&url[..idx], url[idx - 1..].to_string())
+                (&url[..idx], url[idx..].to_string())
             }
             None => (url, String::from("/")),
         };
@@ -89,7 +89,7 @@ impl FromStr for Address {
                     .parse::<i32>()
                     .map_err(|_| AddressParsingError::InvalidPort(port_str.to_string()))?;
 
-                if port < 1 || port > 65535 {
+                if !(1..=65535).contains(&port) {
                     return Err(AddressParsingError::PortOutOfRange(port));
                 }
 
@@ -99,5 +99,14 @@ impl FromStr for Address {
         };
 
         Ok(Address::new(&host, Some(port), &path))
+    }
+}
+
+impl fmt::Display for Address {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Address: {}", self.hostname)?;
+        writeln!(f, "Port: {}", self.port)?;
+        writeln!(f, "Path: {}", self.path)?;
+        Ok(())
     }
 }

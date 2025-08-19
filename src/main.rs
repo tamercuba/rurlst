@@ -1,9 +1,10 @@
-use crate::address::Address;
-use crate::cli::run;
-use clap::{Arg, ArgMatches, Command, value_parser};
+use crate::cli::{Request, run};
+use crate::{address::Address, headers::RequestHeader};
+use clap::{Arg, ArgAction, ArgMatches, Command, value_parser};
 
 mod address;
 mod cli;
+mod headers;
 
 pub fn get_arguments() -> ArgMatches {
     Command::new("rURLst - A Blazingly slow and unoptimized cURL implemented in rust")
@@ -16,6 +17,14 @@ pub fn get_arguments() -> ArgMatches {
                 .required(true)
                 .value_parser(value_parser!(Address)),
         )
+        .arg(
+            Arg::new("headers")
+                .short('H')
+                .long("header")
+                .help("Custom headers to include in the request")
+                .action(ArgAction::Append)
+                .value_parser(value_parser!(RequestHeader)),
+        )
         .get_matches()
 }
 
@@ -23,5 +32,16 @@ fn main() {
     let matches = get_arguments();
     let url = matches.get_one::<Address>("url").unwrap();
 
-    let _response = run(url.clone());
+    // Concatenate headers into a RequestHeader
+    let headers = matches
+        .get_many::<RequestHeader>("headers")
+        .unwrap_or_default()
+        .fold(RequestHeader::new(String::new()), |mut acc, header| {
+            acc.0.push_str(&header.0);
+            acc.0.push('\n'); // Add a newline to separate headers
+            acc
+        });
+    let request = Request::new(url, &headers, None, "HTTP/1.1".into());
+
+    let _response = run(request);
 }
