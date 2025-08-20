@@ -1,10 +1,14 @@
+use std::str::FromStr;
+
 use crate::cli::{Request, run};
+use crate::request_protocol::RequestProtocol;
 use crate::{address::Address, headers::RequestHeader};
 use clap::{Arg, ArgAction, ArgMatches, Command, value_parser};
 
 mod address;
 mod cli;
 mod headers;
+mod request_protocol;
 
 pub fn get_arguments() -> ArgMatches {
     Command::new("rURLst - A Blazingly slow and unoptimized cURL implemented in rust")
@@ -38,10 +42,12 @@ fn main() {
         .unwrap_or_default()
         .fold(RequestHeader::new(String::new()), |mut acc, header| {
             acc.0.push_str(&header.0);
-            acc.0.push('\n'); // Add a newline to separate headers
+            acc.0.push('\r');
+            acc.0.push('\n');
             acc
         });
-    let request = Request::new(url, &headers, None, "HTTP/1.1".into());
+    let http_protocol = RequestProtocol::new("HTTP/1.1").expect("Failed to parse HTTP protocol");
+    let request = Request::new(url, &headers, None, http_protocol);
 
     let _response = run(request);
 }

@@ -1,6 +1,6 @@
 use clap::error::Result;
 
-use crate::{address::Address, headers::RequestHeader};
+use crate::{address::Address, headers::RequestHeader, request_protocol::RequestProtocol};
 use std::{fmt, net::TcpStream};
 
 #[derive(Debug)]
@@ -8,7 +8,7 @@ pub struct Request<'a> {
     addr: &'a Address,
     headers: &'a RequestHeader,
     method: String,
-    protocol: String,
+    protocol: RequestProtocol,
 }
 
 impl<'a> Request<'a> {
@@ -16,7 +16,7 @@ impl<'a> Request<'a> {
         addr: &'a Address,
         headers: &'a RequestHeader,
         method: Option<String>,
-        protocol: String,
+        protocol: RequestProtocol,
     ) -> Self {
         let method = method.unwrap_or_else(|| "GET".to_string());
         Request {
